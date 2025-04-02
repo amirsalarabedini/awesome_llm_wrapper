@@ -82,7 +82,6 @@ class GeminiProvider(BaseProvider):
         
         payload = {
             "contents": gemini_messages,
-            "maxTokens": kwargs.pop("max_tokens", 1000),
             **kwargs
         }
 
@@ -144,7 +143,6 @@ class GeminiProvider(BaseProvider):
         payload = {
             "contents": gemini_messages,
             "stream": True,
-            "maxTokens": kwargs.pop("max_tokens", 1000),
             **kwargs
         }
 
