@@ -14,6 +14,10 @@ A unified Python library for interacting with multiple Large Language Model APIs
 - Input validation and type checking for robust operation
 - Detailed usage metrics for token consumption
 - Consistent default parameters across all providers
+- Consistent parameter handling across providers
+- Built-in error handling with retries for rate limiting
+- Streaming support for efficient token generation
+- Simplified message handling for both completions and chat
 
 ## Installation
 
@@ -227,6 +231,62 @@ The `Response` object provides access to:
 - `raw_response`: The full raw response from the provider
 - `usage`: Token usage statistics
 - `finish_reason`: The reason why the generation stopped
+
+## Parameter Handling
+
+The library intelligently handles parameter conversion between different providers:
+
+### Common Parameters (automatically converted)
+
+| Parameter | OpenAI | Gemini | Anthropic |
+|-----------|--------|--------|-----------|
+| `max_tokens` | `max_tokens` | `maxOutputTokens` | `max_tokens` |
+| `temperature` | `temperature` | `temperature` | `temperature` |
+| `top_p` | `top_p` | `topP` | `top_p` |
+| `top_k` | N/A | `topK` | N/A |
+
+You can use the snake_case (Python style) parameter names consistently across all providers, and the library will automatically convert them to the appropriate format for each API:
+
+```python
+# This works for all providers
+response = client.complete(
+    provider="gemini",  # or "openai" or "anthropic" 
+    prompt="Tell me a joke",
+    max_tokens=100,
+    temperature=0.7,
+    top_p=0.9,
+    top_k=40  # only used by Gemini, ignored by others
+)
+```
+
+### Provider-Specific Parameters
+
+You can also pass provider-specific parameters directly:
+
+```python
+# OpenAI-specific
+response = client.complete(
+    provider="openai",
+    prompt="Tell me a joke",
+    frequency_penalty=0.5,  # OpenAI-specific
+    presence_penalty=0.2    # OpenAI-specific
+)
+
+# Gemini-specific
+response = client.complete(
+    provider="gemini",
+    prompt="Tell me a joke",
+    candidateCount=2,  # Gemini-specific
+    stopSequences=["The end"]  # Gemini-specific
+)
+
+# Anthropic-specific
+response = client.complete(
+    provider="anthropic",
+    prompt="Tell me a joke",
+    stop_sequences=["The end"]  # Anthropic-specific
+)
+```
 
 ## Development
 

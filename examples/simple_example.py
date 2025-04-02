@@ -25,7 +25,7 @@ def main():
         # The client will initialize but API calls will fail
         client = LLMClient(
             openai_api_key="dummy_openai_key_for_demonstration",
-            gemini_api_key="AIzaSyChxCD66cgwmyej5BjlW3I-dluOL2ckD_o",
+            gemini_api_key="dummy_gemini_key_for_demonstration",
             anthropic_api_key="dummy_anthropic_key_for_demonstration"
         )
     
@@ -36,13 +36,15 @@ def main():
     print("\nIf you see this message without errors, the LLM Wrapper is installed correctly!")
     print("To use the wrapper with actual LLM providers, you'll need to set up valid API keys.")
     print("Example usage in your own code:")
-    print("Testing Gemini API key with a real request:")
-    # Test with Gemini API
+    print("""
+    # Using OpenAI
     response = client.complete(
-        provider="gemini",
-        prompt="Tell me a joke about programming"
+        provider="openai",
+        prompt="Tell me a joke about programming",
+        max_tokens=100
     )
     print(response.text)
+    """)
 
 if __name__ == "__main__":
     main()

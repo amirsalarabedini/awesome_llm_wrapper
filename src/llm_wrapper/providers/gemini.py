@@ -81,9 +81,25 @@ class GeminiProvider(BaseProvider):
                 })
         
         payload = {
-            "contents": gemini_messages,
-            **kwargs
+            "contents": gemini_messages
         }
+        
+        # Add max_tokens parameter with the correct name for Gemini API
+        if "max_tokens" in kwargs:
+            payload["maxOutputTokens"] = kwargs.pop("max_tokens")
+        
+        # Convert snake_case to camelCase for Gemini API parameters
+        if "temperature" in kwargs:
+            payload["temperature"] = kwargs.pop("temperature")
+            
+        if "top_p" in kwargs:
+            payload["topP"] = kwargs.pop("top_p")
+            
+        if "top_k" in kwargs:
+            payload["topK"] = kwargs.pop("top_k")
+            
+        # Add any remaining kwargs
+        payload.update(kwargs)
 
         try:
             url = f"{self.BASE_URL}/models/{model}:generateContent?key={self.api_key}"
@@ -142,9 +158,25 @@ class GeminiProvider(BaseProvider):
         
         payload = {
             "contents": gemini_messages,
-            "stream": True,
-            **kwargs
+            "stream": True
         }
+        
+        # Add max_tokens parameter with the correct name for Gemini API
+        if "max_tokens" in kwargs:
+            payload["maxOutputTokens"] = kwargs.pop("max_tokens")
+            
+        # Convert snake_case to camelCase for Gemini API parameters
+        if "temperature" in kwargs:
+            payload["temperature"] = kwargs.pop("temperature")
+            
+        if "top_p" in kwargs:
+            payload["topP"] = kwargs.pop("top_p")
+            
+        if "top_k" in kwargs:
+            payload["topK"] = kwargs.pop("top_k")
+            
+        # Add any remaining kwargs
+        payload.update(kwargs)
 
         try:
             url = f"{self.BASE_URL}/models/{model}:streamGenerateContent?key={self.api_key}"
