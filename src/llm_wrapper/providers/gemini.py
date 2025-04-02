@@ -53,15 +53,36 @@ class GeminiProvider(BaseProvider):
         
         # Convert messages to Gemini format
         gemini_messages = []
+        system_content = None
+        
+        # Check for system message first
         for msg in prepared_messages:
+            if msg.role == "system":
+                system_content = msg.content
+                break
+                
+        for msg in prepared_messages:
+            if msg.role == "system":
+                # System message is handled separately, skip here
+                continue
+                
             role = "user" if msg.role == "user" else "model"
-            gemini_messages.append({
-                "role": role,
-                "parts": [{"text": msg.content}]
-            })
+            
+            # Add system instruction to the first user message if available
+            if role == "user" and system_content and not gemini_messages:
+                gemini_messages.append({
+                    "role": role,
+                    "parts": [{"text": f"System instruction: {system_content}\n\nUser message: {msg.content}"}]
+                })
+            else:
+                gemini_messages.append({
+                    "role": role,
+                    "parts": [{"text": msg.content}]
+                })
         
         payload = {
             "contents": gemini_messages,
+            "maxTokens": kwargs.pop("max_tokens", 1000),
             **kwargs
         }
 
@@ -93,16 +114,37 @@ class GeminiProvider(BaseProvider):
         
         # Convert messages to Gemini format
         gemini_messages = []
+        system_content = None
+        
+        # Check for system message first
         for msg in prepared_messages:
+            if msg.role == "system":
+                system_content = msg.content
+                break
+                
+        for msg in prepared_messages:
+            if msg.role == "system":
+                # System message is handled separately, skip here
+                continue
+                
             role = "user" if msg.role == "user" else "model"
-            gemini_messages.append({
-                "role": role,
-                "parts": [{"text": msg.content}]
-            })
+            
+            # Add system instruction to the first user message if available
+            if role == "user" and system_content and not gemini_messages:
+                gemini_messages.append({
+                    "role": role,
+                    "parts": [{"text": f"System instruction: {system_content}\n\nUser message: {msg.content}"}]
+                })
+            else:
+                gemini_messages.append({
+                    "role": role,
+                    "parts": [{"text": msg.content}]
+                })
         
         payload = {
             "contents": gemini_messages,
             "stream": True,
+            "maxTokens": kwargs.pop("max_tokens", 1000),
             **kwargs
         }
 

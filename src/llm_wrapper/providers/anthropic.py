@@ -58,11 +58,19 @@ class AnthropicProvider(BaseProvider):
         # Convert messages to Anthropic format
         anthropic_messages = []
         for msg in prepared_messages:
-            role = "user" if msg.role == "user" else "assistant"
-            anthropic_messages.append({
-                "role": role,
-                "content": msg.content
-            })
+            if msg.role == "system":
+                # Add system message as a user message with system prefix
+                anthropic_messages.append({
+                    "role": "user",
+                    "content": f"<system>\n{msg.content}\n</system>"
+                })
+            else:
+                # Handle standard user and assistant messages
+                role = "user" if msg.role == "user" else "assistant"
+                anthropic_messages.append({
+                    "role": role,
+                    "content": msg.content
+                })
         
         payload = {
             "model": model,
@@ -99,11 +107,19 @@ class AnthropicProvider(BaseProvider):
         # Convert messages to Anthropic format
         anthropic_messages = []
         for msg in prepared_messages:
-            role = "user" if msg.role == "user" else "assistant"
-            anthropic_messages.append({
-                "role": role,
-                "content": msg.content
-            })
+            if msg.role == "system":
+                # Add system message as a user message with system prefix
+                anthropic_messages.append({
+                    "role": "user",
+                    "content": f"<system>\n{msg.content}\n</system>"
+                })
+            else:
+                # Handle standard user and assistant messages
+                role = "user" if msg.role == "user" else "assistant"
+                anthropic_messages.append({
+                    "role": role,
+                    "content": msg.content
+                })
         
         payload = {
             "model": model,
@@ -134,8 +150,30 @@ class AnthropicProvider(BaseProvider):
                     
                 try:
                     chunk = json.loads(line)
-                    if "content" in chunk and chunk["content"]:
-                        # Create a synthetic response with just this chunk
+                    # Handle different types of events in the stream
+                    if "type" in chunk:
+                        event_type = chunk.get("type")
+                        
+                        # Content block contains text
+                        if event_type == "content_block_delta" and "delta" in chunk:
+                            delta = chunk["delta"]
+                            if "text" in delta:
+                                synthetic_response = {
+                                    "content": [{"text": delta["text"]}],
+                                    "stop_reason": None
+                                }
+                                yield Response.from_anthropic(synthetic_response, model)
+                        
+                        # Message is complete
+                        elif event_type == "message_stop":
+                            synthetic_response = {
+                                "content": [{"text": ""}],
+                                "stop_reason": chunk.get("stop_reason")
+                            }
+                            yield Response.from_anthropic(synthetic_response, model)
+                    
+                    # Fallback for older API versions or different formats
+                    elif "content" in chunk and chunk["content"]:
                         synthetic_response = {
                             "content": [{"text": chunk["content"]}],
                             "stop_reason": chunk.get("stop_reason")

@@ -22,21 +22,30 @@ class LLMClient:
             openai_api_key: API key for OpenAI.
             gemini_api_key: API key for Google Gemini.
             anthropic_api_key: API key for Anthropic.
+            
+        Raises:
+            ValueError: If all API keys are None or empty strings.
         """
         self.providers = {}
 
         # Initialize providers with provided API keys
-        if openai_api_key:
+        if openai_api_key and openai_api_key.strip():
             from llm_wrapper.providers.openai import OpenAIProvider
             self.providers[Provider.OPENAI] = OpenAIProvider(openai_api_key)
 
-        if gemini_api_key:
+        if gemini_api_key and gemini_api_key.strip():
             from llm_wrapper.providers.gemini import GeminiProvider
             self.providers[Provider.GEMINI] = GeminiProvider(gemini_api_key)
 
-        if anthropic_api_key:
+        if anthropic_api_key and anthropic_api_key.strip():
             from llm_wrapper.providers.anthropic import AnthropicProvider
             self.providers[Provider.ANTHROPIC] = AnthropicProvider(anthropic_api_key)
+            
+        # Validate that at least one provider is initialized
+        if not self.providers:
+            raise ValueError(
+                "No valid API keys provided. At least one provider API key is required."
+            )
 
     @classmethod
     def from_env(cls) -> 'LLMClient':
@@ -44,11 +53,24 @@ class LLMClient:
 
         Returns:
             An initialized LLMClient.
+            
+        Raises:
+            ValueError: If no valid API keys found in environment variables.
         """
+        openai_key = os.environ.get("OPENAI_API_KEY", "")
+        gemini_key = os.environ.get("GEMINI_API_KEY", "")
+        anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        
+        if not any([openai_key.strip(), gemini_key.strip(), anthropic_key.strip()]):
+            raise ValueError(
+                "No valid API keys found in environment variables. "
+                "Set at least one of OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY."
+            )
+            
         return cls(
-            openai_api_key=os.environ.get("OPENAI_API_KEY"),
-            gemini_api_key=os.environ.get("GEMINI_API_KEY"),
-            anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY")
+            openai_api_key=openai_key,
+            gemini_api_key=gemini_key,
+            anthropic_api_key=anthropic_key
         )
 
     def _get_provider(self, provider_name: Union[str, Provider]) -> BaseProvider:
