@@ -7,9 +7,13 @@ A unified Python library for interacting with multiple Large Language Model APIs
 - Single interface for multiple LLM providers (OpenAI, Google Gemini, Anthropic)
 - Simple configuration with API keys or environment variables
 - Standardized request and response formats across providers
-- Comprehensive error handling and rate limiting
+- Comprehensive error handling with detailed contextual messages
+- Automatic rate limit handling with exponential backoff
 - Full streaming support for real-time responses
+- Proper system message handling for all providers
+- Input validation and type checking for robust operation
 - Detailed usage metrics for token consumption
+- Consistent default parameters across all providers
 
 ## Installation
 
@@ -102,6 +106,26 @@ response = client.chat(
 )
 ```
 
+## System Message Handling
+
+Each provider handles system messages differently, but LLM Wrapper normalizes this for you:
+
+```python
+# System messages are properly formatted for each provider
+response = client.chat(
+    provider="anthropic",  # Works the same for OpenAI and Gemini
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant who always responds in rhyme."},
+        {"role": "user", "content": "Tell me about machine learning."}
+    ]
+)
+```
+
+Behind the scenes:
+- **OpenAI**: System messages are passed directly as "system" role messages
+- **Anthropic**: System messages are formatted with `<system>...</system>` tags
+- **Gemini**: System messages are prepended to the first user message
+
 ## Model Selection
 
 Each provider has a default model, but you can specify a different model using the `model` parameter:
@@ -134,7 +158,9 @@ response = client.complete(
 )
 ```
 
-## Error Handling
+## Error Handling and Rate Limiting
+
+The library provides comprehensive error handling, including automatic retries for rate limit errors:
 
 ```python
 from llm_wrapper import LLMClient
@@ -147,10 +173,17 @@ try:
     )
     print(response.text)
 except ValueError as e:
-    print(f"Configuration error: {e}")
+    print(f"Configuration error: {e}")  # Invalid API keys, missing parameters, etc.
+except requests.HTTPError as e:
+    print(f"HTTP error: {e}")  # API errors with detailed context
 except Exception as e:
-    print(f"API error: {e}")
+    print(f"Other error: {e}")  # Any other errors that might occur
 ```
+
+Rate limit handling is built-in:
+- Automatic retries with exponential backoff
+- Respects the `Retry-After` header when provided by the API
+- Detailed error messages if all retries fail
 
 ## Configuration
 
@@ -164,6 +197,8 @@ GEMINI_API_KEY=your-gemini-key
 ANTHROPIC_API_KEY=your-anthropic-key
 ```
 
+If no valid API keys are found, the library will raise a clear error message.
+
 ### Available Models
 
 Each provider has a default model that will be used if no model is specified:
@@ -175,6 +210,12 @@ Each provider has a default model that will be used if no model is specified:
 | Anthropic | claude-3-5-sonnet   | claude-3-opus, claude-3-haiku, etc.        |
 
 You can specify any model supported by the provider's API using the `model` parameter.
+
+### Consistent Default Parameters
+
+All providers use consistent default parameters:
+- `max_tokens`: 1000 (for all providers)
+- Other parameters are passed directly to the underlying API
 
 ### Response Object
 
