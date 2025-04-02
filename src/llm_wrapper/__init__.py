@@ -3,5 +3,5 @@
 from llm_wrapper.client import LLMClient
 from llm_wrapper.models import Message, Response
 
-__version__ = "0.1.1"
+__version__ = "0.1.3"
 __all__ = ["LLMClient", "Message", "Response"]
