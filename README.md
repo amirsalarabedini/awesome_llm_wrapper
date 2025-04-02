@@ -18,7 +18,7 @@ A unified Python library for interacting with multiple Large Language Model APIs
 ## Installation
 
 ```bash
-pip install llm-wrapper
+pip install awesome-llm-wrapper
 ```
 
 ## Quick Start
